@@ -21,7 +21,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'vean_transactions.urls'
+ROOT_URLCONF = 'settings.urls'
 
 WSGI_APPLICATION = 'settings.wsgi.application'
 
