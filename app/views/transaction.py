@@ -15,6 +15,7 @@ class TransactionViewSet(ModelViewSet):
     queryset = Transaction.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TransactionFilter
+    lookup_url_kwarg = "code"
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):

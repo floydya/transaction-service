@@ -10,8 +10,10 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'rest_framework',
+    'rest_framework_swagger',
     'django_filters',
     'app',
+    'django.contrib.staticfiles',
 ]
 
 MIDDLEWARE = [
@@ -32,6 +34,20 @@ DATABASES = {
     }
 }
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+            ],
+        },
+    },
+]
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Europe/Kiev'
 USE_I18N = True
@@ -41,11 +57,14 @@ USE_TZ = True
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [],
     'UNAUTHENTICATED_USER': None,
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ],
-    'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.JSONParser',
-    ],
+    # 'DEFAULT_RENDERER_CLASSES': [
+    #     'rest_framework.renderers.JSONRenderer',
+    # ],
+    # 'DEFAULT_PARSER_CLASSES': [
+    #     'rest_framework.parsers.JSONParser',
+    # ],
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'EXCEPTION_HANDLER': 'settings.handlers.custom_exception_handler'
 }
+
+STATIC_URL = '/static/'

@@ -7,7 +7,11 @@ __all__ = "TransactionSerializer", "TransactionCancelSerializer"
 
 class TransactionSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField()
-    wallet = serializers.PrimaryKeyRelatedField(queryset=Wallet.objects.all())
+    code = serializers.ReadOnlyField()
+    wallet = serializers.SlugRelatedField(
+        queryset=Wallet.objects.all(),
+        slug_field="code"
+    )
     type = serializers.ReadOnlyField()
     description = serializers.CharField(required=False)
     timestamp = serializers.DateTimeField(required=False)
@@ -16,6 +20,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             "id",
+            "code",
             "type",
             "wallet",
             "content_type_id",

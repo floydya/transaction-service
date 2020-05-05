@@ -1,21 +1,37 @@
 from uuid import uuid4
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from app.utils import time_string_as_utc as tsau, date_scopes
 
 
-class Wallet(models.Model):
-    id = models.UUIDField(default=uuid4, primary_key=True, db_index=True)
+class Account(models.Model):
+    class Meta:
+        verbose_name = _("account")
+        verbose_name_plural = _("accounts")
+        db_table = "accounts"
+
+    code = models.UUIDField(default=uuid4, unique=True, db_index=True)
     name = models.CharField(max_length=64)
     hook_url = models.URLField(null=True, blank=True)
 
+
+class Wallet(models.Model):
     class Meta:
         verbose_name_plural = _("Wallets")
         db_table = "wallets"
+
+    class TypeChoices(models.TextChoices):
+        REAL = "real", _("Real")
+        VIRTUAL = "virtual", _("Virtual")
+
+    code = models.UUIDField(default=uuid4, unique=True, db_index=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="wallets")
+    name = models.CharField(max_length=64)
+    type = models.CharField(choices=TypeChoices.choices, max_length=8, db_index=True)
 
 
 class TransactionManager(models.Manager):
@@ -23,8 +39,8 @@ class TransactionManager(models.Manager):
     def affirmed(self):
         qs = self.get_queryset()
         affirmed_qs = qs.filter(type__in=(
-            Transaction.TransactionTypes.DEPOSIT,
-            Transaction.TransactionTypes.WITHDRAW
+            self.model.TransactionTypes.DEPOSIT,
+            self.model.TransactionTypes.WITHDRAW
         ))
         return affirmed_qs
 
@@ -46,8 +62,15 @@ class TransactionQuerySet(models.QuerySet):
     def in_range(self, _from, _to, tz=settings.TIME_ZONE):
         return self.after(_from, tz).before(_to, tz)
 
-    def wallet(self, wallet_id):
-        return self.filter(wallet_id=wallet_id)
+    def wallet(self, wallet_code):
+        return self.filter(wallet__code=wallet_code)
+
+    def account(self, account_code, _type=None):
+        assert _type in Wallet.TypeChoices.values or _type is None, "TypeError: type undefined"
+        qs = self.filter(wallet__account__code=account_code)
+        if _type is not None:
+            qs = qs.filter(wallet__type=_type)
+        return qs
 
     def total(self):
         aggregation = self.aggregate(total=models.Sum('amount'))
@@ -64,12 +87,9 @@ class Transaction(models.Model):
         WITHDRAW = 'withdraw', _("Withdraw")
         CANCELED = 'canceled', _("Canceled")
 
-    id = models.UUIDField(default=uuid4, primary_key=True, db_index=True)
-
+    code = models.UUIDField(default=uuid4, unique=True, db_index=True)
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
-
     type = models.CharField(choices=TransactionTypes.choices, max_length=8)
-
     content_type_id = models.PositiveIntegerField()
     entity_id = models.PositiveIntegerField()
     amount = models.DecimalField(max_digits=14, decimal_places=2)
@@ -79,7 +99,12 @@ class Transaction(models.Model):
     objects = TransactionManager.from_queryset(TransactionQuerySet)()
 
     @classmethod
-    def create(cls, wallet, content_type_id, entity_id, amount, description=None, timestamp=None):
+    @transaction.atomic
+    def create(cls, wallet: Wallet, content_type_id, entity_id, amount, description=None, timestamp=None):
+        if amount < 0:
+            wallet_total = wallet.transactions.affirmed().total()
+            assert wallet_total + amount >= 0, "Balance after transaction will be negative."
+
         transaction_type = cls.TransactionTypes.DEPOSIT if amount > 0 else cls.TransactionTypes.WITHDRAW
 
         if description is None:
@@ -96,6 +121,17 @@ class Transaction(models.Model):
             description=description,
             timestamp=timestamp
         )
+
+    @transaction.atomic
+    def update(self, **kwargs):
+        print(self._meta.fields)
+        assert all(kwarg in self._meta.fields for kwarg in kwargs), "Undefined kwarg"
+
+        if "amount" in kwargs.keys():
+            self.amount = kwargs.get("amount")
+            self.type = self.TransactionTypes.DEPOSIT if self.amount > 0 else self.TransactionTypes.WITHDRAW
+
+        return self
 
     def cancel(self, initiator=None):
         assert self.type != self.TransactionTypes.CANCELED, "This transaction is already canceled."
