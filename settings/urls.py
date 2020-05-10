@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path
 
 from rest_framework.routers import SimpleRouter
@@ -20,4 +22,4 @@ urlpatterns = [
                   path("accounts/<uuid:account_code>/wallets/", wallet_create),
                   path("accounts/<uuid:account_code>/wallets/<uuid:wallet_code>/", wallet_info),
                   path("", schema_view),
-              ] + router.urls
+              ] + router.urls + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

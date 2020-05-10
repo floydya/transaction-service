@@ -12,11 +12,10 @@ django = "*"
 django-cacheops = "*"
 django-environ = "*"
 django-filter = "*"
-django-redis = "*"
 django-rest-swagger = "*"
 djangorestframework = "*"
-gevent = "*"
 gunicorn = "*"
+gevent = "*"
 psycopg2-binary = "*"
 
 [requires]

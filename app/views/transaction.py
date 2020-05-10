@@ -1,10 +1,12 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import pagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from app.filters import TransactionFilter
 from app.models import Transaction
+from app.pagination import TransactionPagination
 from app.serializers import TransactionSerializer, TransactionCancelSerializer
 
 __all__ = 'TransactionViewSet',
@@ -16,6 +18,7 @@ class TransactionViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TransactionFilter
     lookup_url_kwarg = "code"
+    pagination_class = TransactionPagination
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):

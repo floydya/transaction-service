@@ -1,0 +1,30 @@
+version: "3.3"
+
+services:
+
+  transactions:
+    build: .
+    command: gunicorn settings.wsgi:application -c python:settings.gunicorn
+    ports:
+      - 80:80
+    environment:
+      - SECRET_KEY=CHANGEME
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,0.0.0.0
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=db
+    expose:
+      - 5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/:cached
+
+volumes:
+  postgres_data:

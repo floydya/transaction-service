@@ -7,31 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from app.utils import time_string_as_utc as tsau, date_scopes
 
-
-class Account(models.Model):
-    class Meta:
-        verbose_name = _("account")
-        verbose_name_plural = _("accounts")
-        db_table = "accounts"
-
-    code = models.UUIDField(default=uuid4, unique=True, db_index=True)
-    name = models.CharField(max_length=64)
-    hook_url = models.URLField(null=True, blank=True)
-
-
-class Wallet(models.Model):
-    class Meta:
-        verbose_name_plural = _("Wallets")
-        db_table = "wallets"
-
-    class TypeChoices(models.TextChoices):
-        REAL = "real", _("Real")
-        VIRTUAL = "virtual", _("Virtual")
-
-    code = models.UUIDField(default=uuid4, unique=True, db_index=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="wallets")
-    name = models.CharField(max_length=64)
-    type = models.CharField(choices=TypeChoices.choices, max_length=8, db_index=True)
+__all__ = "Transaction",
 
 
 class TransactionManager(models.Manager):
@@ -66,7 +42,6 @@ class TransactionQuerySet(models.QuerySet):
         return self.filter(wallet__code=wallet_code)
 
     def account(self, account_code, _type=None):
-        assert _type in Wallet.TypeChoices.values or _type is None, "TypeError: type undefined"
         qs = self.filter(wallet__account__code=account_code)
         if _type is not None:
             qs = qs.filter(wallet__type=_type)
@@ -88,7 +63,7 @@ class Transaction(models.Model):
         CANCELED = 'canceled', _("Canceled")
 
     code = models.UUIDField(default=uuid4, unique=True, db_index=True)
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
+    wallet = models.ForeignKey("Wallet", on_delete=models.CASCADE, related_name="transactions")
     type = models.CharField(choices=TransactionTypes.choices, max_length=8)
     content_type_id = models.PositiveIntegerField()
     entity_id = models.PositiveIntegerField()
@@ -98,9 +73,12 @@ class Transaction(models.Model):
 
     objects = TransactionManager.from_queryset(TransactionQuerySet)()
 
+    def __str__(self):
+        return str(self.code)
+
     @classmethod
     @transaction.atomic
-    def create(cls, wallet: Wallet, content_type_id, entity_id, amount, description=None, timestamp=None):
+    def create(cls, wallet, content_type_id, entity_id, amount, description=None, timestamp=None):
         if amount < 0:
             wallet_total = wallet.transactions.affirmed().total()
             assert wallet_total + amount >= 0, "Balance after transaction will be negative."
@@ -124,8 +102,8 @@ class Transaction(models.Model):
 
     @transaction.atomic
     def update(self, **kwargs):
-        print(self._meta.fields)
-        assert all(kwarg in self._meta.fields for kwarg in kwargs), "Undefined kwarg"
+        print([f.name for f in self._meta.fields])
+        assert all(kwarg in (f.name for f in self._meta.fields) for kwarg in kwargs), "Undefined kwarg"
 
         if "amount" in kwargs.keys():
             self.amount = kwargs.get("amount")
