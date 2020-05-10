@@ -32,7 +32,8 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 
 class TransactionCancelSerializer(serializers.Serializer):
-    initiator = serializers.CharField(allow_null=True, required=True)
+    canceled_by = serializers.IntegerField(allow_null=True, required=True)
+    canceled_reason = serializers.CharField(allow_null=True, required=True, max_length=512)
 
     def update(self, instance: Transaction, validated_data):
-        return instance.cancel(validated_data.get('initiator', None))
+        return instance.cancel(**validated_data)

@@ -63,9 +63,11 @@ class TransactionTestCase(TestCase):
         cls.wallet2 = cls.account.wallets.create(name="Virtual wallet", type=Wallet.TypeChoices.VIRTUAL)
         cls.transaction = Transaction.objects.create(wallet=cls.wallet1, amount=500)
 
-    def test_type_max_length(self):
-        max_length = self.transaction._meta.get_field('type').max_length
-        self.assertEquals(max_length, 8)
+    def test_str_method(self):
+        self.assertEquals(
+            str(self.transaction.code),
+            str(self.transaction)
+        )
 
     def test_amount_max_digits(self):
         max_digits = self.transaction._meta.get_field('amount').max_digits
@@ -77,7 +79,6 @@ class TransactionTestCase(TestCase):
 
     def test_transaction_creation(self):
         transaction = Transaction.objects.create(wallet=self.wallet1, amount=400)
-        self.assertEquals(transaction.type, Transaction.TransactionTypes.DEPOSIT.value)
         self.assertEquals(transaction.description, "")
         self.assertIsNotNone(transaction.timestamp)
 
@@ -87,13 +88,6 @@ class TransactionTestCase(TestCase):
             self.fail()
         except AssertionError as e:
             self.assertEquals(str(e), "Balance after transaction will be negative.")
-        transaction = Transaction.objects.create(wallet=self.wallet1, amount=-300)
-        self.assertEquals(transaction.type, Transaction.TransactionTypes.WITHDRAW.value)
-
-    def test_transaction_zero_amount(self):
-        expected_type = Transaction.TransactionTypes.ZERO.value
-        transaction = Transaction.objects.create(wallet=self.wallet1, amount=0)
-        self.assertEquals(transaction.type, expected_type)
 
     def test_non_empty_description_on_create(self):
         transaction = Transaction.objects.create(wallet=self.wallet1, amount=400, description="Test description")
@@ -104,3 +98,21 @@ class TransactionTestCase(TestCase):
         self.assertEquals(transaction.timestamp.isoformat(), "2020-01-01T22:00:00+00:00")
         transaction2 = Transaction.objects.create(wallet=self.wallet1, amount=200, timestamp="2020-06-02T00:00:00")
         self.assertEquals(transaction2.timestamp.isoformat(), "2020-06-01T21:00:00+00:00")
+
+    def test_cancel_without_data(self):
+        t = Transaction.objects.create(wallet=self.wallet1, amount=500)
+        t.cancel()
+        t.refresh_from_db()
+        self.assertEquals(t.canceled, True)
+        self.assertEquals(t.canceled_by, None)
+        self.assertEquals(t.canceled_reason, None)
+        self.assertIsNotNone(t.canceled_at)
+
+    def test_cancel_with_data(self):
+        t = Transaction.objects.create(wallet=self.wallet1, amount=100)
+        t.cancel(canceled_by=5, comment="Test cancel")
+        t.refresh_from_db()
+        self.assertEquals(t.canceled, True)
+        self.assertEquals(t.canceled_by, 5)
+        self.assertEquals(t.canceled_reason, "Test cancel")
+        self.assertIsNotNone(t.canceled_at)
