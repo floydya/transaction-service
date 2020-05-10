@@ -17,9 +17,9 @@ router = SimpleRouter()
 router.register("transactions", TransactionViewSet, basename="transactions")
 
 urlpatterns = [
-                  path("accounts/", account_create),
-                  path("accounts/<uuid:account_code>/", account_info),
-                  path("accounts/<uuid:account_code>/wallets/", wallet_create),
-                  path("accounts/<uuid:account_code>/wallets/<uuid:wallet_code>/", wallet_info),
+                  path("accounts/", account_create, name="account_create"),
+                  path("accounts/<uuid:account_code>/", account_info, name="account_info"),
+                  path("accounts/<uuid:account_code>/wallets/", wallet_create, name="wallet_create"),
+                  path("accounts/<uuid:account_code>/wallets/<uuid:wallet_code>/", wallet_info, name="wallet_info"),
                   path("", schema_view),
               ] + router.urls + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

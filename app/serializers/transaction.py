@@ -30,9 +30,6 @@ class TransactionSerializer(serializers.ModelSerializer):
             "timestamp",
         )
 
-    def create(self, validated_data):
-        return Transaction.create(**validated_data)
-
 
 class TransactionCancelSerializer(serializers.Serializer):
     initiator = serializers.CharField(allow_null=True, required=True)

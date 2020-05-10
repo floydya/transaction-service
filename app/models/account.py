@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 __all__ = "Account",
@@ -18,3 +19,6 @@ class Account(models.Model):
 
     def __str__(self):
         return str(self.code)
+
+    def get_absolute_url(self):
+        return reverse("account_info", kwargs={"account_code": self.code})
