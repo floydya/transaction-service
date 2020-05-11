@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.db import models, transaction
+from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -85,11 +86,14 @@ class Transaction(models.Model):
     def __str__(self):
         return str(self.code)
 
-    def cancel(self, canceled_by=None, comment=None):
+    def get_absolute_url(self):
+        return reverse("transactions-detail", kwargs={"code": self.code})
+
+    def cancel(self, canceled_by=None, canceled_reason=None):
         assert not self.canceled, "This transaction is already canceled."
         self.canceled = True
         self.canceled_by = canceled_by or None
-        self.canceled_reason = comment or None
+        self.canceled_reason = canceled_reason or None
         self.canceled_at = now()
         self.save(update_fields=("canceled", "canceled_by", "canceled_reason", "canceled_at"))
         return self

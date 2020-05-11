@@ -12,8 +12,10 @@ services:
       - DEBUG=True
       - ALLOWED_HOSTS=localhost,0.0.0.0
       - DATABASE_URL=postgres://postgres:postgres@db:5432/db
+      - CACHE_URL=redis://redis:6379/1
     depends_on:
       - db
+      - redis
     volumes:
       - ./:/app/
 
@@ -27,6 +29,10 @@ services:
       - 5432
     volumes:
       - postgres_data:/var/lib/postgresql/data/:cached
+
+  redis:
+    image: redis:alpine
+
 
 volumes:
   postgres_data:

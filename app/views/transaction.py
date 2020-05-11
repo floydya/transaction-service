@@ -17,10 +17,11 @@ class TransactionViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TransactionFilter
     lookup_url_kwarg = "code"
+    lookup_field = "code"
     pagination_class = TransactionPagination
 
     @action(detail=True, methods=["post"])
-    def cancel(self, request, pk=None):
+    def cancel(self, request, code=None):
         transaction = self.get_object()
         serializer = TransactionCancelSerializer(instance=transaction, data=request.data)
         serializer.is_valid(raise_exception=True)

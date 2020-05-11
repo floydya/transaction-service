@@ -69,6 +69,9 @@ class TransactionTestCase(TestCase):
             str(self.transaction)
         )
 
+    def test_get_absolute_url(self):
+        self.assertEquals(self.transaction.get_absolute_url(), f"/transactions/{self.transaction.code}/")
+
     def test_amount_max_digits(self):
         max_digits = self.transaction._meta.get_field('amount').max_digits
         self.assertEquals(max_digits, 14)
@@ -110,7 +113,7 @@ class TransactionTestCase(TestCase):
 
     def test_cancel_with_data(self):
         t = Transaction.objects.create(wallet=self.wallet1, amount=100)
-        t.cancel(canceled_by=5, comment="Test cancel")
+        t.cancel(canceled_by=5, canceled_reason="Test cancel")
         t.refresh_from_db()
         self.assertEquals(t.canceled, True)
         self.assertEquals(t.canceled_by, 5)

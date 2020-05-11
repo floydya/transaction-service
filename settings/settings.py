@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'django_filters',
     'app',
+    'cacheops',
     'django.contrib.staticfiles',
 ]
 
@@ -63,3 +64,12 @@ REST_FRAMEWORK = {
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
+if CACHE_URL := env('CACHE_URL'):
+    CACHEOPS_REDIS = CACHE_URL
+    CACHEOPS = {
+        'app.account': {'ops': 'all', 'timeout': 60 * 60},
+        'app.wallet': {'ops': 'all', 'timeout': 60 * 60},
+        'app.transaction': {'ops': 'all', 'timeout': 60 * 60},
+        '*.*': {'ops': (), 'timeout': 60 * 60},
+    }

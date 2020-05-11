@@ -21,4 +21,4 @@ class Account(models.Model):
         return str(self.code)
 
     def get_absolute_url(self):
-        return reverse("account_info", kwargs={"account_code": self.code})
+        return reverse("accounts-detail", kwargs={"code": self.code})

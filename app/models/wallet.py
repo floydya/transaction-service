@@ -25,4 +25,4 @@ class Wallet(models.Model):
         return str(self.code)
 
     def get_absolute_url(self):
-        return reverse('wallet_info', kwargs={"account_code": self.account.code, "wallet_code": self.code})
+        return reverse('wallets-detail', kwargs={"account_code": self.account.code, "code": self.code})
