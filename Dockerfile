@@ -15,5 +15,4 @@ COPY . /app/
 CMD chmod +x /app/entrypoint.sh
 
 EXPOSE 80
-#CMD ["gunicorn", "settings.wsgi:application", "--config=python:settings.gunicorn"]
 ENTRYPOINT ["sh", "/app/entrypoint.sh"]

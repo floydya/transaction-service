@@ -16,7 +16,8 @@ django-rest-swagger = "*"
 djangorestframework = "*"
 gunicorn = "*"
 gevent = "*"
-psycopg2-binary = "*"
+psycopg2 = {version = "*", os_name = "== 'windows'"}
+psycopg2-binary = {version = "*", os_name = "!= 'windows'"}
 
 [requires]
 python_version = "3.8"

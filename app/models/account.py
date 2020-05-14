@@ -15,7 +15,9 @@ class Account(models.Model):
 
     code = models.UUIDField(default=uuid4, unique=True, db_index=True)
     name = models.CharField(max_length=64)
-    hook_url = models.URLField(null=True, blank=True)
+    # не URLField потому, что межсерверный функционал гарантирует генерацию ссылок.
+    # ссылки на докер-контейнеры с портом(e.g. http://transactions:8080) не валидируются.
+    hook_url = models.CharField(null=True, blank=True, max_length=256)
 
     def __str__(self):
         return str(self.code)

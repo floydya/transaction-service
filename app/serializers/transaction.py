@@ -12,16 +12,14 @@ class TransactionSerializer(serializers.ModelSerializer):
         queryset=Wallet.objects.all(),
         slug_field="code"
     )
-    type = serializers.ReadOnlyField()
-    description = serializers.CharField(required=False)
-    timestamp = serializers.DateTimeField(required=False)
+    description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    timestamp = serializers.DateTimeField(required=False, allow_null=True)
 
     class Meta:
         model = Transaction
         fields = (
             "id",
             "code",
-            "type",
             "wallet",
             "content_type_id",
             "entity_id",
